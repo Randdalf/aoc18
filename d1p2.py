@@ -7,13 +7,13 @@ from d1 import puzzle
 def solve(deltas):
     deltas = list(deltas)
     frequency = 0
-    seen = set([frequency])
+    seen = set()
     while True:
         for delta in deltas:
+            seen.add(frequency)
             frequency += delta
             if frequency in seen:
                 return frequency
-            seen.add(frequency)
 
 def main():
     print(solve(puzzle()))
