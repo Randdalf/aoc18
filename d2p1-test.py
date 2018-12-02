@@ -21,9 +21,9 @@ class SolveTests(unittest.TestCase):
 
     def test_example2(slf):
         ids = [
-            'aa',
+            'aax',
             'bbb',
-            'cc',
+            'ccx',
             'ccc'
         ]
         slf.assertEqual(solve(ids), 4)
