@@ -5,15 +5,23 @@
 from aocd import get_data
 
 class Rect:
-    def __init__(slf, x, y, w, h):
+    def __init__(slf, id, x, y, w, h):
+        slf.id  = id
         slf.l = x
         slf.r = x + w
         slf.t = y
         slf.b = y + h
 
+    def squares(slf):
+        for x in range(slf.l, slf.r):
+            for y in range(slf.t, slf.b):
+                yield (x, y)
+
 def puzzle():
     for line in get_data(day=3, year=2018).split('\n'):
-        parts = line.split('@')[1].split(':')
-        pos = parts[0].strip().split(',')
-        size = parts[1].strip().split('x')
-        yield Rect(int(pos[0]), int(pos[1]), int(size[0]), int(size[1]))
+        parts = line.split('@')
+        id = parts[0].split('#')[1]
+        rectParts = parts[1].split(':')
+        pos = rectParts[0].strip().split(',')
+        size = rectParts[1].strip().split('x')
+        yield Rect(int(id), int(pos[0]), int(pos[1]), int(size[0]), int(size[1]))

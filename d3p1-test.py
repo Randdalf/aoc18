@@ -10,9 +10,9 @@ from d3 import Rect
 class SolveTests(unittest.TestCase):
     def test_example1(slf):
         rects = [
-            Rect(1, 3, 4, 4),
-            Rect(3, 1, 4, 4),
-            Rect(5, 5, 2, 2)
+            Rect(1, 1, 3, 4, 4),
+            Rect(2, 3, 1, 4, 4),
+            Rect(3, 5, 5, 2, 2)
         ]
         slf.assertEqual(solve(rects), 4)
 
