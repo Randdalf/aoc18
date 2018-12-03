@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 
-"""Advent of Code 2018, Day 1, Puzzle 2"""
+"""Advent of Code 2018, Day 1"""
 
-from d1 import puzzle
+from aoc18 import solve
 
-def solve(deltas):
+def parse(data):
+    return map(int, data.split('\n'))
+
+def sum_deltas(deltas):
+    return sum(deltas)
+
+def find_repeated_freq(deltas):
     deltas = list(deltas)
     frequency = 0
     seen = set()
@@ -15,8 +21,5 @@ def solve(deltas):
             if frequency in seen:
                 return frequency
 
-def main():
-    print(solve(puzzle()))
-
 if __name__ == "__main__":
-    main()
+    solve(1, parse, sum_deltas, find_repeated_freq)
