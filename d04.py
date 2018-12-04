@@ -3,6 +3,7 @@
 """Advent of Code 2018, Day 4"""
 
 import re
+from itertools import product
 
 from aoc18 import solve
 
@@ -58,17 +59,8 @@ def find_sleepiest_guard_1(shifts):
 
 def find_sleepiest_guard_2(shifts):
     guards = get_guards_from_shifts(shifts)
-    max_sleep = None
-    max_guard = None
-    max_minute = None
-    for minute in range(60):
-        for guard in guards:
-            sleep = guard.minutes[minute]
-            if not max_sleep or sleep > max_sleep:
-                max_sleep = sleep
-                max_guard = guard
-                max_minute = minute
-    return max_guard.id * max_minute
+    result = max(product(range(60), guards), key=lambda x: x[1].minutes[x[0]])
+    return result[0] * result[1].id
 
 if __name__ == "__main__":
     solve(4, parse, find_sleepiest_guard_1, find_sleepiest_guard_2)
