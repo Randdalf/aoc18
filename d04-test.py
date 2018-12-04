@@ -5,11 +5,10 @@
 import unittest
 
 from d04 import parse
-from d04 import find_sleepiest_guard
+from d04 import find_sleepiest_guard_1
+from d04 import find_sleepiest_guard_2
 
-class FindSleepiestGuardTests(unittest.TestCase):
-    def test_example1(slf):
-        data ="""[1518-11-01 00:00] Guard #10 begins shift
+example1_data = """[1518-11-01 00:00] Guard #10 begins shift
 [1518-11-01 00:05] falls asleep
 [1518-11-01 00:25] wakes up
 [1518-11-01 00:30] falls asleep
@@ -26,7 +25,14 @@ class FindSleepiestGuardTests(unittest.TestCase):
 [1518-11-05 00:03] Guard #99 begins shift
 [1518-11-05 00:45] falls asleep
 [1518-11-05 00:55] wakes up"""
-        slf.assertEqual(find_sleepiest_guard(parse(data)), 240)
+
+class FindSleepiestGuard1Tests(unittest.TestCase):
+    def test_example1(slf):
+        slf.assertEqual(find_sleepiest_guard_1(parse(example1_data)), 240)
+
+class FindSleepiestGuard2Tests(unittest.TestCase):
+    def test_example1(slf):
+        slf.assertEqual(find_sleepiest_guard_2(parse(example1_data)), 4455)
 
 if __name__ == "__main__":
     unittest.main()
