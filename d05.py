@@ -19,5 +19,8 @@ def react(polymer):
             stack.append(unit)
     return len(stack)
 
+def improve(polymer):
+    return min(map(lambda c: react(filter(lambda x: x.lower() != chr(c), polymer)), range(ord('a'), ord('z')+1)))
+
 if __name__ == "__main__":
-    solve(5, parse, react)
+    solve(5, parse, react, improve)

@@ -6,6 +6,7 @@
 import unittest
 
 from d05 import react
+from d05 import improve
 
 class ReactTests(unittest.TestCase):
     def test_example1(slf):
@@ -22,6 +23,10 @@ class ReactTests(unittest.TestCase):
 
     def test_example5(slf):
         slf.assertEqual(react('dabAcCaCBAcCcaDA'), 10)
+
+class ImproveTests(unittest.TestCase):
+    def test_example1(slf):
+        slf.assertEqual(improve('dabAcCaCBAcCcaDA'), 4)
 
 if __name__ == "__main__":
     unittest.main()
