@@ -5,24 +5,24 @@
 
 import unittest
 
-from d05 import react
+from d05 import len_react
 from d05 import improve
 
-class ReactTests(unittest.TestCase):
+class LenReactTests(unittest.TestCase):
     def test_example1(slf):
-        slf.assertEqual(react('aA'), 0)
+        slf.assertEqual(len_react('aA'), 0)
 
     def test_example2(slf):
-        slf.assertEqual(react('abBA'), 0)
+        slf.assertEqual(len_react('abBA'), 0)
 
     def test_example3(slf):
-        slf.assertEqual(react('abAB'), 4)
+        slf.assertEqual(len_react('abAB'), 4)
 
     def test_example4(slf):
-        slf.assertEqual(react('aabAAB'), 6)
+        slf.assertEqual(len_react('aabAAB'), 6)
 
     def test_example5(slf):
-        slf.assertEqual(react('dabAcCaCBAcCcaDA'), 10)
+        slf.assertEqual(len_react('dabAcCaCBAcCcaDA'), 10)
 
 class ImproveTests(unittest.TestCase):
     def test_example1(slf):
