@@ -32,14 +32,7 @@ def coord_max(a, b):
     return Coord(max(a.x, b.x), max(a.y, b.y))
 
 def parse(data):
-    coords = []
-    for line in data.splitlines():
-        elems = line.split(',')
-        coords.append(Coord(int(elems[0]), int(elems[1])))
-    return coords
-
-def row_major(x, y, w):
-    return w * y + x
+    return [Coord(a, b) for a,b in map(lambda x: tuple(map(int, x.split(','))), data.splitlines())]
 
 def largest_finite_area(coords):
     # Transform the coords relative to (0,0)
@@ -79,11 +72,13 @@ def largest_finite_area(coords):
     else:
         return counted[max(candidates, key=lambda i: counted[i])]
 
-def area_within_total_dist(coords, distance):
+def get_bounding_grid_coords(coords):
     tl = functools.reduce(coord_min, coords)
-    br = functools.reduce(coord_max, coords)
-    grid = map(lambda x: Coord(*x), itertools.product(range(tl.x, br.x), range(tl.y, br.y)))
-    return sum(1 for x in filter(lambda d: d < distance, map(lambda g: sum(map(lambda c: dist(g, c), coords)), grid)))
+    br = functools.reduce(coord_max, coords) + Coord(1,1)
+    return map(lambda x: Coord(*x), itertools.product(range(tl.x, br.x), range(tl.y, br.y)))
+
+def area_within_total_dist(coords, distance):
+    return sum(1 for x in filter(lambda d: d < distance, map(lambda g: sum(map(lambda c: dist(g, c), coords)), get_bounding_grid_coords(coords))))
 
 def area_within_total_dist_10000(coords):
     return area_within_total_dist(coords, 10000)
