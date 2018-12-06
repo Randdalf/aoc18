@@ -3,6 +3,7 @@
 """Advent of Code 2018, Day 6"""
 
 import functools
+import itertools
 import collections
 
 from aoc18 import solve
@@ -78,5 +79,14 @@ def largest_finite_area(coords):
     else:
         return counted[max(candidates, key=lambda i: counted[i])]
 
+def area_within_total_dist(coords, distance):
+    tl = functools.reduce(coord_min, coords)
+    br = functools.reduce(coord_max, coords)
+    grid = map(lambda x: Coord(*x), itertools.product(range(tl.x, br.x), range(tl.y, br.y)))
+    return sum(1 for x in filter(lambda d: d < distance, map(lambda g: sum(map(lambda c: dist(g, c), coords)), grid)))
+
+def area_within_total_dist_10000(coords):
+    return area_within_total_dist(coords, 10000)
+
 if __name__ == "__main__":
-    solve(6, parse, largest_finite_area)
+    solve(6, parse, largest_finite_area, area_within_total_dist_10000)
