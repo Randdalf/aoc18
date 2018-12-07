@@ -30,8 +30,7 @@ def work_order(instructions):
     outputs, outstanding, steps = process_work(instructions)
     order = []
     while len(steps) > 0:
-        step = next(filter(lambda x: x == 0, steps), None)
-        step = next(x for x in steps if outstanding[x] == 0)
+        step = next(filter(lambda x: outstanding[x] == 0, steps), None)
         steps.remove(step)
         order.append(step)
         for output in outputs[step]:
