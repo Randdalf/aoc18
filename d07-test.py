@@ -5,20 +5,26 @@
 
 import unittest
 
-from d07 import determine_order
+from d07 import work_order
+from d07 import work_time
 
-class DetermineOrderTests(unittest.TestCase):
+example1 = [
+    ('C', 'A'),
+    ('C', 'F'),
+    ('A', 'B'),
+    ('A', 'D'),
+    ('B', 'E'),
+    ('D', 'E'),
+    ('F', 'E')
+]
+
+class WorkOrderTests(unittest.TestCase):
     def test_example1(slf):
-        instructions = [
-            ('C', 'A'),
-            ('C', 'F'),
-            ('A', 'B'),
-            ('A', 'D'),
-            ('B', 'E'),
-            ('D', 'E'),
-            ('F', 'E')
-        ]
-        slf.assertEqual(determine_order(instructions), "CABDFE")
+        slf.assertEqual(work_order(example1), "CABDFE")
+
+class WorkTimeTests(unittest.TestCase):
+    def test_example1(slf):
+        slf.assertEqual(work_time(example1, 0, 2), 15)
 
 if __name__ == "__main__":
     unittest.main()
