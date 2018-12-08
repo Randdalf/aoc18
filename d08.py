@@ -14,8 +14,14 @@ class TreeNode:
 def parse(data):
     return TreeNode(map(int, data.split(' ')))
 
-def sum_metadata(tree):
-    return sum(tree.metadata) + sum(map(sum_metadata, tree.children))
+def sum_metadata(node):
+    return sum(node.metadata) + sum(map(sum_metadata, node.children))
+
+def node_value(node):
+    if len(node.children) == 0:
+        return sum(node.metadata)
+    else:
+        return sum(map(lambda i: node_value(node.children[i-1]), filter(lambda i: 1 <= i <= len(node.children), node.metadata)))
 
 if __name__ == "__main__":
-    solve(8, parse, sum_metadata)
+    solve(8, parse, sum_metadata, node_value)
