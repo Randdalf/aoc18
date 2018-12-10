@@ -80,15 +80,10 @@ def spell_message(lights):
     size = bmax - bmin
     points = set([(v.x, v.y) for v in map(lambda l: l.p - bmin, lights)])
     chars = []
-
     for y in range(size.y+1):
         for x in range(size.x+1):
-                if (x, y) in points:
-                    chars.append("#")
-                else:
-                    chars.append(".")
+            chars.append("#" if (x,y) in points else ".")
         chars.append('\n')
-
     return ''.join(chars)
 
 if __name__ == "__main__":
