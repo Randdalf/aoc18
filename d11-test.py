@@ -6,6 +6,7 @@
 import unittest
 
 from d11 import power_level
+from d11 import largest_total_power_3x3
 from d11 import largest_total_power
 
 class PowerLevelTests(unittest.TestCase):
@@ -21,12 +22,19 @@ class PowerLevelTests(unittest.TestCase):
     def test_example4(slf):
         slf.assertEqual(power_level(101, 153, 71), 4)
 
-class LargestTotalPowerTests(unittest.TestCase):
+class LargestTotalPower3x3Tests(unittest.TestCase):
     def test_example1(slf):
-        slf.assertEqual(largest_total_power(18), (33, 45))
+        slf.assertEqual(largest_total_power_3x3(18), (33, 45))
 
     def test_example2(slf):
-        slf.assertEqual(largest_total_power(42), (21, 61))
+        slf.assertEqual(largest_total_power_3x3(42), (21, 61))
+
+class LargestTotalPower(unittest.TestCase):
+    def test_example1(slf):
+        slf.assertEqual(largest_total_power(18), (90, 269, 16))
+
+    def test_example2(slf):
+        slf.assertEqual(largest_total_power(42), (232, 251, 12))
 
 if __name__ == "__main__":
     unittest.main()
