@@ -23,33 +23,12 @@ def calculate_power_grid(serial):
 def index(x, y):
     return y * size + x
 
-def total_power(grid, x, y, sq):
-    power = 0
-    for j in range(0, sq):
-        for i in range(0, sq):
-            power += grid[index(x+i, y+j)]
-    return power
-
-def largest_total_power_3x3(serial):
-    grid = calculate_power_grid(serial)
-
-    # Find coord with largest total power level.
-    largest_coord = None
-    largest_power = None
-    for y in range(size - 3):
-        for x in range(size - 3):
-            power = total_power(grid, x, y, 3)
-            if largest_power is None or power > largest_power:
-                largest_coord = (x+1, y+1)
-                largest_power = power
-
-    return largest_coord
-
-def identifiers():
+def identifiers(low, high):
     for y in range(size):
         for x in range(size):
-            for s in range(1, min(size - y, size - x)):
-                yield(x + 1, y + 1, s)
+            for s in range(low, high+1):
+                if x + s < size and y + s < size:
+                    yield(x+1, y+1, s)
 
 def summed_area_table(grid):
     table = []
@@ -76,10 +55,12 @@ def lookup_area(sat, id):
     sd = sat[index(r, b)]
     return sd + sa - sb - sc
 
-def largest_total_power(serial):
+def largest_total_power(serial, low, high):
     grid = calculate_power_grid(serial)
     sat = summed_area_table(grid)
-    return max(identifiers(), key=lambda x: lookup_area(sat, x))
+    return max(identifiers(low, high), key=lambda x: lookup_area(sat, x))
 
 if __name__ == "__main__":
-    solve(11, parse, largest_total_power_3x3, largest_total_power)
+    solver1 = lambda x: largest_total_power(x, 3, 3)[:2]
+    solver2 = lambda x: largest_total_power(x, 1, 300)
+    solve(11, parse, solver1, solver2)
