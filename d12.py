@@ -17,9 +17,8 @@ def parse(data):
 def simulate(state, rules, offset, gens):
     for i in range(gens):
         state = '....' + state + '....'
-        n = len(state)
         next = []
-        for x in range(0, n-5):
+        for x in range(0, len(state)-5):
             next.append('#' if state[x:x+5] in rules else '.')
         offset += next.index('#') - 2
         state = ''.join(next).strip('.')
