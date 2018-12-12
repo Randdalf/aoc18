@@ -38,7 +38,7 @@ def sum_after_50000000000_gens(data):
     rules = data[1]
     offset = 0
     seen = set([state])
-    for g in range(150):
+    for g in range(n):
         state, offset = simulate(state, rules, offset, 1)
         if state in seen:
             return sum_of_plants(state, n - g - 1 + offset)
