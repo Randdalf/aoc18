@@ -26,6 +26,9 @@ class Madness:
         slf.tracks = tracks
         slf.carts = carts
 
+    def order_carts(slf):
+        slf.carts.sort(key=lambda c: (c.pos.y, c.pos.x))
+
 class Cart:
     def __init__(slf, pos, dir):
         slf.pos = pos
@@ -105,8 +108,7 @@ def move_cart(cart, madness):
 
 def tick_until_crash(madness):
     while True:
-        # Sort carts so we tick them in the right order.
-        madness.carts.sort(key=lambda c: (c.pos.y, c.pos.x))
+        madness.order_carts()
 
         # Build a set of occupied positions, for collision checking.
         occupied = set(map(lambda x: x.pos, madness.carts))
@@ -122,5 +124,20 @@ def tick_until_crash(madness):
             else:
                 occupied.add(cart.pos)
 
+def tick_until_one_cart(madness):
+    while len(madness.carts) > 1:
+        madness.order_carts()
+        stack = list(reversed(madness.carts))
+        while len(stack) > 0:
+            cart = stack.pop()
+            move_cart(cart, madness)
+            for otr in madness.carts:
+                if otr != cart and otr.pos == cart.pos:
+                    if otr in stack:
+                        stack.remove(otr)
+                    madness.carts.remove(otr)
+                    madness.carts.remove(cart)
+    return madness.carts[0].pos
+
 if __name__ == "__main__":
-    solve(13, parse, tick_until_crash)
+    solve(13, parse, tick_until_crash, tick_until_one_cart)
