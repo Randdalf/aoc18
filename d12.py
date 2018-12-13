@@ -17,9 +17,8 @@ def parse(data):
 def simulate(state, rules, offset, gens):
     for i in range(gens):
         state = '....' + state + '....'
-        n = len(state)
         next = []
-        for x in range(0, n-5):
+        for x in range(0, len(state)-5):
             next.append('#' if state[x:x+5] in rules else '.')
         offset += next.index('#') - 2
         state = ''.join(next).strip('.')
@@ -38,7 +37,7 @@ def sum_after_50000000000_gens(data):
     rules = data[1]
     offset = 0
     seen = set([state])
-    for g in range(150):
+    for g in range(n):
         state, offset = simulate(state, rules, offset, 1)
         if state in seen:
             return sum_of_plants(state, n - g - 1 + offset)
