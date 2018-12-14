@@ -7,16 +7,8 @@ from aoc18 import solve
 def parse(data):
     return int(data)
 
-def rdigits(n):
-    if n == 0:
-        yield 0
-    else:
-        while n > 0:
-            yield n % 10
-            n //= 10
-
 def digits(n):
-    return reversed(list(rdigits(n)))
+    return map(int, str(n))
 
 def step(recipes, elves):
     recipes.extend(digits(sum(map(lambda i: recipes[i], elves))))
@@ -30,5 +22,18 @@ def ten_scores_after_num(num):
         step(recipes, elves)
     return ''.join(map(str, recipes[num:num+10]))
 
+def recipes_before_num(num):
+    pattern = list(digits(num))
+    recipes = [3, 7]
+    elves = [0, 1]
+    prev = 0
+    while True:
+        step(recipes, elves)
+        curr = len(recipes) - len(pattern)
+        for i in range(prev, curr):
+            if recipes[i] == pattern[0] and all(map(lambda j: recipes[i+j] == pattern[j], range(1, len(pattern)))):
+                return i
+        prev = curr
+
 if __name__ == "__main__":
-    solve(14, parse, ten_scores_after_num)
+    solve(14, parse, ten_scores_after_num, recipes_before_num)
