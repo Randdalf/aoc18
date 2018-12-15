@@ -238,7 +238,8 @@ def elves_win_outcome(orig_world, verbose=False):
             lo_atk = atk
 
     # Binary search between lo and hi until we have found the boundary where
-    # elves start winning.
+    # elves start winning. (This is not 100% reliable, but works for my input
+    # and the examples.)
     while lo_atk + 1 < hi_atk:
         atk = (lo_atk + hi_atk) // 2
         world = simulate(deepcopy(orig_world), atk, verbose)
