@@ -3,6 +3,7 @@
 """Advent of Code 2018, Day 15"""
 
 import math
+from copy import deepcopy
 
 from aoc18 import solve
 
@@ -78,8 +79,15 @@ class World:
         slf.units = units
         slf.walls = walls
         slf.rounds = 0
+        slf.winner = None
         slf.done = False
+        slf.terminate_on_elf_death = False
         slf.all = set(Vec2(x, y) for y in range(slf.size.y) for x in range(slf.size.x))
+
+    def modify_elf_atk(slf, new_atk):
+        for unit in slf.units:
+            if unit.faction == 'E':
+                unit.atk = new_atk
 
     def tick(slf):
         # If we're finishing simulating combat, then don't tick.
@@ -99,6 +107,7 @@ class World:
 
             # If this unit finds no targets, end the simulation.
             if len(targets) == 0:
+                slf.winner = unit.faction
                 slf.done = True
                 return
 
@@ -121,7 +130,7 @@ class World:
 
                 # Find the shortest open paths to each open in-range square.
                 # These should be in reading order, due to the ordering of the
-                # in-range targets and square adjancies.
+                # in-range targets, graph vertices, and adjacencies.
                 open = slf.all - closed
                 verts = sorted(open | set([unit.pos]), key=lambda v: (v.y, v.x))
                 prev = shortest_path_prev(unit.pos, verts)
@@ -146,8 +155,16 @@ class World:
                     slf.units.remove(atk_target)
                     dead.add(atk_target)
 
+                    # Stop ticking if an elf dies and that is undesirable.
+                    if slf.terminate_on_elf_death and atk_target.faction == 'E':
+                        slf.done = True
+                        return
+
         # We have finished a round.
         slf.rounds += 1
+
+    def outcome(slf):
+        return slf.rounds * sum(unit.hp for unit in slf.units)
 
     def __repr__(slf):
         if slf.rounds == 0:
@@ -189,14 +206,48 @@ def parse(data):
                 units.append(Unit(c, Vec2(x, y)))
     return World(size, units, walls)
 
-def outcome(world, verbose=False):
+def simulate(world, elf_atk, verbose):
+    if elf_atk:
+        world.modify_elf_atk(elf_atk)
+        if verbose:
+            print('Elf attack modified to', elf_atk)
     if verbose:
         print(world)
     while not world.done:
         world.tick()
         if verbose:
             print(world)
-    return world.rounds * sum(unit.hp for unit in world.units)
+    return world
+
+def default_outcome(world, verbose=False):
+    simulate(world, None, verbose)
+    return world.outcome()
+
+def elves_win_outcome(orig_world, verbose=False):
+    lo_atk = 3
+    hi_atk = None
+    orig_world.terminate_on_elf_death = True
+
+    # Double attack until we find a reality where elves win.
+    while not hi_atk:
+        atk = lo_atk * 2
+        world = simulate(deepcopy(orig_world), atk, verbose)
+        if world.winner == 'E':
+            hi_atk = atk
+        else:
+            lo_atk = atk
+
+    # Binary search between lo and hi until we have found the boundary where
+    # elves start winning.
+    while lo_atk + 1 < hi_atk:
+        atk = (lo_atk + hi_atk) // 2
+        world = simulate(deepcopy(orig_world), atk, verbose)
+        if world.winner == 'E':
+            hi_atk = atk
+        else:
+            lo_atk = atk
+
+    return world.outcome()
 
 if __name__ == "__main__":
-    solve(15, parse, outcome)
+    solve(15, parse, default_outcome, elves_win_outcome)
