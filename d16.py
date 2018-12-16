@@ -16,20 +16,14 @@ class Sample:
         return f'{{B:{slf.before}; I:{slf.instr}, A:{slf.after}}}'
 
 class Input:
-    def __init__(slf, samples):
+    def __init__(slf, samples, program):
         slf.samples = samples
-
-class RegisterError(Exception):
-    pass
+        slf.program = program
 
 def store(r, i, v):
-    if i < 0 or i > 3:
-        raise RegisterError()
     r[i] = v
 
 def get(r, i):
-    if i < 0 or i > 3:
-        raise RegisterError()
     return r[i]
 
 def addr(r, a, b, c):
@@ -128,7 +122,10 @@ def parse(data):
         after = [int(x) for x in groups[2].split(', ')]
         samples.append(Sample(before, instr, after))
 
-    return Input(samples)
+    # Program
+    program = [[int(x) for x in line.split(' ')] for line in sections[1].splitlines()]
+
+    return Input(samples, program)
 
 def count_multi_behaviour_samples(input):
     count = 0
@@ -137,13 +134,58 @@ def count_multi_behaviour_samples(input):
         args = sample.instr[1:]
         for op in ops:
             r = list(sample.before)
-            try:
-                op(r, *args)
-                valid += int(r == sample.after)
-            except RegisterError:
-                pass
+            op(r, *args)
+            valid += int(r == sample.after)
         count += int(valid >= 3)
     return count
 
+def determine_opcodes_and_execute(input):
+    possibles = [set(ops) for i in range(16)]
+    ops_by_code = [None for i in range(16)]
+
+    # Determine which ops are valid for each opcode.
+    for sample in input.samples:
+        opcode = sample.instr[0]
+
+        # We've already determined the op for this opcode.
+        if ops_by_code[opcode]:
+            continue
+
+        # Test out all the possible ops.
+        args = sample.instr[1:]
+        failed = set()
+        possible_ops = possibles[opcode]
+
+        for op in possible_ops:
+            r = list(sample.before)
+            op(r, *args)
+            if r != sample.after:
+                failed.add(op)
+
+        # Remove any ops that failed from the list.
+        if len(failed) > 0:
+            possible_ops -= failed
+
+        # If we have only a single remaining op, then we can resolve the
+        # meaning of this opcode, which can cascade to other opcodes.
+        if len(possible_ops) == 1:
+            resolved = [opcode]
+            while len(resolved) > 0:
+                opcode = resolved.pop()
+                op = next(iter(possibles[opcode]))
+                ops_by_code[opcode] = op
+                for i, p in enumerate(possibles):
+                    if i != opcode and op in p:
+                        p.remove(op)
+                        if len(p) == 1:
+                            resolved.append(i)
+
+    # Run the test program.
+    r = [0, 0, 0, 0]
+    for instr in input.program:
+        ops_by_code[instr[0]](r, *instr[1:])
+
+    return r[0]
+
 if __name__ == "__main__":
-    solve(16, parse, count_multi_behaviour_samples)
+    solve(16, parse, count_multi_behaviour_samples, determine_opcodes_and_execute)
