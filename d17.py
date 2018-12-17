@@ -101,7 +101,7 @@ def count_water(state):
             else:
                 if down(l) not in state and down(l) not in stream:
                     sources.append(l)
-                elif down(r) not in state and down(r) not in stream:
+                if down(r) not in state and down(r) not in stream:
                     sources.append(r)
 
         settled = len(to_settle) > 0
