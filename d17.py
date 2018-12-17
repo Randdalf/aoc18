@@ -14,11 +14,11 @@ def parse(data):
     for line in data.splitlines():
         if line.startswith('x'):
             nums = [int(k) for k in re.match(x_pattern, line).groups()]
-            for y in range(nums[1], nums[2]):
+            for y in range(nums[1], nums[2]+1):
                 state[(nums[0], y)] = '#'
         else:
             nums = [int(k) for k in re.match(y_pattern, line).groups()]
-            for x in range(nums[1], nums[2]):
+            for x in range(nums[1], nums[2]+1):
                 state[(x, nums[0])] = '#'
     return state
 
@@ -32,10 +32,10 @@ def down(pos):
     return (pos[0], pos[1] + 1)
 
 def write_png(state, stream, spring):
-    min_y = 0
-    max_y = max(p[1] for p in state) + 1
-    min_x = min(p[0] for p in state)
-    max_x = max(p[0] for p in state) + 1
+    min_x = min(p[0] for p in state) - 1
+    max_x = max(p[0] for p in state) + 2
+    min_y = min(p[1] for p in state) - 1
+    max_y = max(p[1] for p in state) + 2
     w = max_x - min_x
     h = max_y - min_y
 
@@ -60,11 +60,17 @@ def write_png(state, stream, spring):
             pixels.append(row)
         writer.write(f, pixels)
 
-def count_water(state):
+def simulate_stream(state):
     spring = (500, 0)
+    min_y = min(p[1] for p in state)
     max_y = max(p[1] for p in state)
-    settled = True
 
+    # Move the spring down until it's within the bounds.
+    while down(spring)[1] < min_y:
+        spring = down(spring)
+
+    # Simulate the water until no water settles in a pass.
+    settled = True
     while settled:
         sources = [spring]
         to_settle = set()
@@ -73,13 +79,13 @@ def count_water(state):
         while len(sources) > 0:
             # Move down until we encounter a blockage.
             w = sources.pop()
-            while down(w) not in state and down(w) not in stream and w[1] <= max_y:
+            while down(w) not in state and down(w) not in stream and down(w)[1] <= max_y:
                 w = down(w)
                 stream.add(w)
 
             # Stop simulating from this source if we are outside the bounds, or
             # we've already simulated from this tile.
-            if w[1] == 0 or w[1] > max_y or down(w) in stream:
+            if w[1] == 0 or down(w)[1] > max_y or down(w) in stream:
                 continue
 
             # Spread left and right.
@@ -110,7 +116,15 @@ def count_water(state):
 
     write_png(state, stream, spring)
 
+    return stream
+
+def count_all_water(state):
+    stream = simulate_stream(state)
     return len(stream) + sum(int(s == '~') for s in state.values())
 
+def count_settled_water(state):
+    stream = simulate_stream(state)
+    return sum(int(s == '~') for s in state.values())
+
 if __name__ == "__main__":
-    solve(17, parse, count_water)
+    solve(17, parse, count_all_water, count_settled_water)
