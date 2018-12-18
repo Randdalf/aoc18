@@ -15,6 +15,16 @@ class Area:
     def __init__(slf, tiles, size):
         slf.tiles = tiles
         slf.size = size
+        slf.offsets = [
+            -size-1,
+            -size,
+            -size+1,
+            -1,
+            +1,
+            size-1,
+            size,
+            size+1
+        ]
 
 def parse(data):
     tiles = []
@@ -40,16 +50,6 @@ def print_area(area):
     print(t)
 
 def simulate(area, minutes):
-    offsets = [
-        -area.size-1,
-        -area.size,
-        -area.size+1,
-        -1,
-        +1,
-        area.size-1,
-        area.size,
-        area.size+1
-    ]
     for m in range(minutes):
         index = area.size
         new_tiles = []
@@ -60,7 +60,7 @@ def simulate(area, minutes):
             for x in range(0, area.size - 2):
                 tile = area.tiles[index]
                 counts = [0, 0, 0, 0]
-                for offset in offsets:
+                for offset in area.offsets:
                     counts[area.tiles[index + offset]] += 1
                 if tile == 0:
                     if counts[1] >= 3:
@@ -83,12 +83,28 @@ def simulate(area, minutes):
         new_tiles.extend(3 for _ in range(area.size))
         area.tiles = new_tiles
 
-def resource_value(area, minutes):
-    simulate(area, minutes)
+def calculate_value(area):
     counts = [0, 0, 0, 0]
     for tile in area.tiles:
         counts[tile] += 1
     return counts[1] * counts[2]
 
+def resource_value(area, minutes):
+    if minutes < 500:
+        simulate(area, minutes)
+        return calculate_value(area)
+
+    seen = {}
+    for m in range(1, minutes + 1):
+        simulate(area, 1)
+        checksum = hash(tuple(area.tiles))
+        if checksum not in seen:
+            seen[checksum] = m
+        else:
+            cycle = m - seen[checksum]
+            lookahead = (minutes - m) % cycle
+            simulate(area, lookahead)
+            return calculate_value(area)
+
 if __name__ == "__main__":
-    solve(18, parse, lambda x: resource_value(x, 10))
+    solve(18, parse, lambda x: resource_value(x, 10), lambda x: resource_value(x, 1000000000))
