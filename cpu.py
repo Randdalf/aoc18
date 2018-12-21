@@ -92,3 +92,33 @@ ops = [
     eqri,
     eqrr
 ]
+
+
+class Program:
+    def __init__(slf, ipr, instrs):
+        slf.ipr = ipr
+        slf.instrs = instrs
+
+def parse(data):
+    lines = data.splitlines()
+    ipr = int(lines[0].split(' ')[1])
+    ops_by_name = {op.__name__: op for op in ops}
+    instrs = []
+    for line in lines[1:]:
+        parts = line.split(' ')
+        instrs.append((ops_by_name[parts[0]], tuple(map(int, parts[1:]))))
+    return Program(ipr, instrs)
+
+def execute(program, r, max_cycles, ip=0, verbose=False):
+    ipr = program.ipr
+    instrs = program.instrs
+    cycles = 0
+    while 0 <= ip < len(instrs) and cycles < max_cycles:
+        r[ipr] = ip
+        instr = instrs[ip]
+        instr[0](r, *instr[1])
+        if verbose:
+            print(instr[0].__name__, instr[1], '=>', r)
+        ip = r[ipr] + 1
+        cycles += 1
+    return ip
