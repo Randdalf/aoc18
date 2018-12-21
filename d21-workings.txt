@@ -1,0 +1,43 @@
+    #ip 2
+b:
+    seti 123 0 4        r[4] = 123
+    bani 4 456 4        r[4] = r[4] & 456 = 72
+    eqri 4 72 4         r[4] = (r[4] == 72)
+    addr 4 2 2          r[2] = r[4] + r[2]          if r[4] == 72: jmp a
+    seti 0 0 2          r[2] = 0                    else: jmp b
+a:
+    seti 0 1 4          r[4] = 0
+k:
+    bori 4 65536 1      r[1] = r[4] | 65536         r[1] = 65336
+    seti 16031208 7 4   r[4] = 16031208
+i:
+    bani 1 255 3        r[3] = r[1] & 255           r[3] = 0
+    addr 4 3 4          r[4] += r[3]                r[4] = 16031208
+    bani 4 16777215 4   r[4] &= 16777215            r[4] = 16031208
+    muli 4 65899 4      r[4] *= 65899               r[4] = 1056440575992
+    bani 4 16777215 4   r[4] &= 16777215            r[4] = 12838904
+    gtir 256 1 3        r[3] = 256 > r[1]           r[3] = 0
+    addr 3 2 2          r[2] = r[3] + r[2]          if 256 > 65336: jmp c
+    addi 2 1 2          r[2] = r[2] + 1             else: jmp d
+c:
+    seti 27 3 2         r[2] = 27                   jmp j
+d:
+    seti 0 9 3          r[3] = 0
+g:
+    addi 3 1 5          r[5] = r[3] + 1             r[5] = 1
+    muli 5 256 5        r[5] *= 256                 r[5] = 256,512,768,..
+    gtrr 5 1 5          r[5] = r[5] > r[1]          r[5] = 256,512,768,... > 65336
+    addr 5 2 2          r[2] = r[5] + r[2]          if r[5] > r[1]: jmp e
+    addi 2 1 2          r[2] = r[2] + 1             else: jmp f
+e:
+    seti 25 7 2         r[2] = 25                   jmp h
+f:
+    addi 3 1 3          r[3] = r[3] + 1
+    seti 17 4 2         r[2] = 17                   jmp g
+h:
+    setr 3 1 1          r[1] = r[3]                 r[1] = 256
+    seti 7 5 2          r[2] = 7                    jmp i
+j:
+    eqrr 4 0 3                                      halt if r0 == r4
+    addr 3 2 2                                      if r[4] == r[0]: halt
+    seti 5 1 2                                      else: jmp k
