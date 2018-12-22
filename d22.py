@@ -112,24 +112,24 @@ def estimate_cost(f, t):
 def dist_between(f, t):
     return 7 if f[2] != t[2] else 1
 
-def adjacencies(node, cave):
-    if node[0] > 0:
-        yield (node[0]-1, node[1])
-    if node[1] > 0:
-        yield (node[0], node[1]-1)
-    yield (node[0]+1, node[1])
-    yield (node[0], node[1]+1)
+def adjacencies(x, y):
+    if x > 0:
+        yield (x-1, y)
+    if y > 0:
+        yield (x, y-1)
+    yield (x+1, y)
+    yield (x, y+1)
 
-def neighbors(node, cave):
-    type = cave.type(node[0], node[1])
+def neighbors(nx, ny, eq, cave):
+    type = cave.type(nx, ny)
 
     # Switching equipment.
-    yield (node[0], node[1], equipment[(type, node[2])])
+    yield (nx, ny, equipment[(type, eq)])
 
     # Moving to a valid adjacency.
-    for x,y in adjacencies(node, cave):
-        if (cave.type(x, y), node[2]) in equipment:
-            yield (x, y, node[2])
+    for x,y in adjacencies(nx, ny):
+        if (cave.type(x, y), eq) in equipment:
+            yield (x, y, eq)
 
 def reconstruct_path(came_from, current, cave):
     path = [current]
@@ -157,7 +157,7 @@ def shortest_path(cave):
         if current == sink:
             return reconstruct_path(came_from, current, cave)
         closed.add(current)
-        for neighbor in neighbors(current, cave):
+        for neighbor in neighbors(*current, cave):
             if neighbor in closed:
                 continue
             tentative_g = g_score[current] + dist_between(current, neighbor)
