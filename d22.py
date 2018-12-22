@@ -4,7 +4,10 @@
 
 import re
 import math
+import itertools
 from collections import defaultdict
+from heapq import heappush
+from heapq import heappop
 
 from aoc18 import solve
 
@@ -37,13 +40,16 @@ class Cave:
         slf.types = {}
 
     def geologic(slf, x, y):
-        if (x,y) == (0,0) or (x,y) == (slf.target[0], slf.target[1]):
+        if (x,y) == (0,0) or (x,y) == slf.target:
             return 0
         elif y == 0:
             return x * 16807
         elif x == 0:
             return y * 48271
         else:
+            # Ensure we have the erosion values calculated.
+            slf.type(x-1,y)
+            slf.type(x,y-1)
             return slf.erosion[(x-1,y)] * slf.erosion[(x,y-1)]
 
     def type(slf, x, y):
@@ -54,13 +60,46 @@ class Cave:
             slf.types[region] = e % 3
         return slf.types[region]
 
+class pqueue:
+    def __init__(slf):
+        slf.pq = []
+        slf.finder = {}
+        slf.counter = itertools.count()
+        slf.n = 0
+
+    def add(slf, task, priority):
+        if task in slf.finder:
+            slf.remove(task)
+        entry = [priority, next(slf.counter), task]
+        slf.finder[task] = entry
+        heappush(slf.pq, entry)
+        slf.n += 1
+
+    def remove(slf, task):
+        entry = slf.finder.pop(task)
+        entry[-1] = None
+        slf.n -= 1
+
+    def pop(slf):
+        while slf.pq:
+            priority, count, task = heappop(slf.pq)
+            if task:
+                del slf.finder[task]
+                return task
+
+    def __len__(slf):
+        return slf.n
+
+    def __contains__(slf, task):
+        return task in slf.finder
+
 def parse(data):
     lines = data.splitlines()
     dp = re.compile('depth: (\d+)')
     tp = re.compile('target: (\d+),(\d+)')
     dm = re.match(dp, lines[0])
     tm = re.match(tp, lines[1])
-    return Cave(int(dm.group(1)), (int(tm.group(1)), int(tm.group(2)), TORCH))
+    return Cave(int(dm.group(1)), (int(tm.group(1)), int(tm.group(2))))
 
 def risk_level(cave):
     w = cave.target[0] + 1
@@ -73,18 +112,13 @@ def estimate_cost(f, t):
 def dist_between(f, t):
     return 7 if f[2] != t[2] else 1
 
-hack = 15
-
 def adjacencies(node, cave):
     if node[0] > 0:
         yield (node[0]-1, node[1])
     if node[1] > 0:
         yield (node[0], node[1]-1)
-    # HACK: These should extend into infinity.
-    if node[0] < cave.target[0] + hack - 1:
-        yield (node[0]+1, node[1])
-    if node[1] < cave.target[1] + hack - 1:
-        yield (node[0], node[1]+1)
+    yield (node[0]+1, node[1])
+    yield (node[0], node[1]+1)
 
 def neighbors(node, cave):
     type = cave.type(node[0], node[1])
@@ -109,38 +143,29 @@ def reconstruct_path(came_from, current, cave):
     return mins
 
 def shortest_path(cave):
-    # HACK: Fill out the cave types ahead of time.
-    for x in range(cave.target[0] + hack):
-        for y in range(cave.target[1] + hack):
-            cave.type(x, y)
-
     # A* search algorithm.
     start = (0,0,TORCH)
+    sink = (*cave.target,TORCH)
     closed = set()
-    open = {start}
+    open = pqueue()
+    open.add(start, estimate_cost(start, sink))
     came_from = {}
     g_score = defaultdict(lambda: math.inf)
     g_score[start] = 0
-    f_score = defaultdict(lambda: math.inf)
-    f_score[start] = estimate_cost(start, cave.target)
     while len(open) > 0:
-        # OPTIMISATION: Use priority queue.
-        current = min(open, key=lambda x: f_score[x])
-        if current == cave.target:
+        current = open.pop()
+        if current == sink:
             return reconstruct_path(came_from, current, cave)
-        open.remove(current)
         closed.add(current)
         for neighbor in neighbors(current, cave):
             if neighbor in closed:
                 continue
             tentative_g = g_score[current] + dist_between(current, neighbor)
-            if neighbor not in open:
-                open.add(neighbor)
-            elif tentative_g >= g_score[neighbor]:
+            if neighbor in open and tentative_g >= g_score[neighbor]:
                 continue
             came_from[neighbor] = current
             g_score[neighbor] = tentative_g
-            f_score[neighbor] = tentative_g + estimate_cost(neighbor, cave.target)
+            open.add(neighbor, tentative_g + estimate_cost(neighbor, sink))
 
 if __name__ == "__main__":
     solve(22, parse, risk_level, shortest_path)
