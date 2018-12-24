@@ -4,10 +4,8 @@
 
 import re
 import math
-import itertools
 from collections import defaultdict
-from heapq import heappush
-from heapq import heappop
+from pqueue import pqueue
 
 from aoc18 import solve
 
@@ -59,39 +57,6 @@ class Cave:
             slf.erosion[region] = e
             slf.types[region] = e % 3
         return slf.types[region]
-
-class pqueue:
-    def __init__(slf):
-        slf.pq = []
-        slf.finder = {}
-        slf.counter = itertools.count()
-        slf.n = 0
-
-    def add(slf, task, priority):
-        if task in slf.finder:
-            slf.remove(task)
-        entry = [priority, next(slf.counter), task]
-        slf.finder[task] = entry
-        heappush(slf.pq, entry)
-        slf.n += 1
-
-    def remove(slf, task):
-        entry = slf.finder.pop(task)
-        entry[-1] = None
-        slf.n -= 1
-
-    def pop(slf):
-        while slf.pq:
-            priority, count, task = heappop(slf.pq)
-            if task:
-                del slf.finder[task]
-                return task
-
-    def __len__(slf):
-        return slf.n
-
-    def __contains__(slf, task):
-        return task in slf.finder
 
 def parse(data):
     lines = data.splitlines()

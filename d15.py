@@ -3,26 +3,11 @@
 """Advent of Code 2018, Day 15"""
 
 import math
+import cProfile
 from copy import deepcopy
+from pqueue import pqueue
 
 from aoc18 import solve
-
-class Vec2:
-    def __init__(slf, x, y):
-        slf.x = x
-        slf.y = y
-
-    def __add__(slf, otr):
-        return Vec2(slf.x + otr.x, slf.y + otr.y)
-
-    def __eq__(slf, otr):
-        return slf.x == otr.x and slf.y == otr.y
-
-    def __hash__(slf):
-        return hash((slf.x, slf.y))
-
-    def __repr__(slf):
-        return f'({slf.x:3d}, {slf.y:3d})'
 
 class Unit:
     def __init__(slf, faction, pos):
@@ -37,28 +22,32 @@ class Unit:
 def adjacencies(pos):
     # Adjacencies are intentionally returned in reading order, so we only have
     # to calculate a single shortest path to each target.
-    yield pos + Vec2(0, -1)
-    yield pos + Vec2(-1, 0)
-    yield pos + Vec2(+1, 0)
-    yield pos + Vec2(0, +1)
+    y = pos[0]
+    x = pos[1]
+    yield (y-1,x)
+    yield (y,x-1)
+    yield (y,x+1)
+    yield (y+1,x)
 
 def shortest_path_prev(source, verts):
     # Initialisation.
-    q = list(verts)
-    dist = {v: math.inf for v in q}
-    prev = {v: None for v in q}
+    q = pqueue()
+    dist = {v: math.inf for v in verts}
+    prev = {v: None for v in verts}
     dist[source] = 0
+    for v in verts:
+        q.add(v, dist[v])
 
     # Work out dist and prev for each vertex.
     while len(q) > 0:
-        u = min(q, key=lambda v: dist[v])
-        q.remove(u)
+        u = q.pop()
         for v in adjacencies(u):
             if v in q:
                 alt = dist[u] + 1
                 if alt < dist[v]:
                     dist[v] = alt
                     prev[v] = u
+                    q.add(v, alt)
 
     return prev
 
@@ -74,15 +63,16 @@ def shortest_path(source, target, prev):
     return (path[-2], len(path)) if len(path) > 0 else None
 
 class World:
-    def __init__(slf, size, units, walls):
-        slf.size = size
+    def __init__(slf, width, height, units, walls):
+        slf.width = width
+        slf.height = height
         slf.units = units
         slf.walls = walls
         slf.rounds = 0
         slf.winner = None
         slf.done = False
         slf.terminate_on_elf_death = False
-        slf.all = set(Vec2(x, y) for y in range(slf.size.y) for x in range(slf.size.x))
+        slf.all = set((y, x) for y in range(slf.height) for x in range(slf.width))
 
     def modify_elf_atk(slf, new_atk):
         for unit in slf.units:
@@ -97,7 +87,7 @@ class World:
         dead = set()
 
         # Units take turns in reading order.
-        for unit in sorted(slf.units, key=lambda u:(u.pos.y, u.pos.x)):
+        for unit in sorted(slf.units, key=lambda u:u.pos):
             # Dead men take no turns.
             if unit in dead:
                 continue
@@ -119,7 +109,7 @@ class World:
             open_in_range = list(filter(lambda x: x not in closed, all_in_range))
 
             # Sort open in range by reading order.
-            open_in_range.sort(key=lambda t: (t.y, t.x))
+            open_in_range.sort()
 
             # If we're not in-range of a target, then move.
             if unit.pos not in all_in_range:
@@ -132,7 +122,7 @@ class World:
                 # These should be in reading order, due to the ordering of the
                 # in-range targets, graph vertices, and adjacencies.
                 open = slf.all - closed
-                verts = sorted(open | set([unit.pos]), key=lambda v: (v.y, v.x))
+                verts = sorted(open | set([unit.pos]))
                 prev = shortest_path_prev(unit.pos, verts)
                 all_paths = [shortest_path(unit.pos, t, prev) for t in open_in_range]
                 open_paths = [p for p in all_paths if p]
@@ -148,7 +138,7 @@ class World:
             if unit.pos in all_in_range:
                 danger = set(adjacencies(unit.pos))
                 adj_targets = filter(lambda t: t.pos in danger, targets)
-                adj_targets = sorted(adj_targets, key=lambda t: (t.hp, t.pos.y, t.pos.x))
+                adj_targets = sorted(adj_targets, key=lambda t: (t.hp, t.pos))
                 atk_target = adj_targets[0]
                 atk_target.hp -= unit.atk
                 if atk_target.hp <= 0:
@@ -174,10 +164,10 @@ class World:
         else:
             repr = f'After {slf.rounds} rounds:\n'
         units_by_pos = dict((u.pos, u) for u in slf.units)
-        for y in range(slf.size.y):
+        for y in range(slf.height):
             units_in_row = []
-            for x in range(slf.size.x):
-                pos = Vec2(x, y)
+            for x in range(slf.width):
+                pos = (y, x)
                 if pos in slf.walls:
                     repr += '#'
                 elif pos in units_by_pos:
@@ -196,15 +186,15 @@ def parse(data):
     units = []
     walls = set()
     split = data.splitlines()
-    size = Vec2(0, len(split))
+    height = len(split)
     for y,line in enumerate(split):
-        size.x = len(line)
+        width = len(line)
         for x,c in enumerate(line):
             if c == '#':
-                walls.add(Vec2(x, y))
+                walls.add((y, x))
             elif c == 'G' or c == 'E':
-                units.append(Unit(c, Vec2(x, y)))
-    return World(size, units, walls)
+                units.append(Unit(c, (y, x)))
+    return World(width, height, units, walls)
 
 def simulate(world, elf_atk, verbose):
     if elf_atk:
@@ -224,29 +214,13 @@ def default_outcome(world, verbose=False):
     return world.outcome()
 
 def elves_win_outcome(orig_world, verbose=False):
-    lo_atk = 3
-    hi_atk = None
+    atk = 3
+    world = None
     orig_world.terminate_on_elf_death = True
 
-    # Double attack until we find a reality where elves win.
-    while not hi_atk:
-        atk = lo_atk * 2
+    while not world or world.winner != 'E':
         world = simulate(deepcopy(orig_world), atk, verbose)
-        if world.winner == 'E':
-            hi_atk = atk
-        else:
-            lo_atk = atk
-
-    # Binary search between lo and hi until we have found the boundary where
-    # elves start winning. (This is not 100% reliable, but works for my input
-    # and the examples.)
-    while lo_atk + 1 < hi_atk:
-        atk = (lo_atk + hi_atk) // 2
-        world = simulate(deepcopy(orig_world), atk, verbose)
-        if world.winner == 'E':
-            hi_atk = atk
-        else:
-            lo_atk = atk
+        atk += 1
 
     return world.outcome()
 
