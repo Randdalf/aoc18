@@ -7,6 +7,8 @@ import unittest
 
 from d24 import parse
 from d24 import simulate
+from d24 import simulate_no_boost
+from d24 import boost_immune_system
 
 example1="""Immune System:
 17 units each with 5390 hit points (weak to radiation, bludgeoning) with an attack that does 4507 fire damage at initiative 2
@@ -18,7 +20,10 @@ Infection:
 
 class SimulateTests(unittest.TestCase):
     def test_example1(slf):
-        slf.assertEqual(simulate(parse(example1), verbose=True), 5216)
+        slf.assertEqual(simulate_no_boost(parse(example1)), 5216)
+
+    def test_example2(slf):
+        slf.assertEqual(simulate(parse(example1), boost=1570)[1], 51)
 
 if __name__ == "__main__":
     unittest.main()

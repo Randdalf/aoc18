@@ -4,6 +4,7 @@
 
 import re
 from itertools import islice
+from copy import deepcopy
 
 from aoc18 import solve
 
@@ -92,6 +93,7 @@ def fight(groups, verbose=True):
     if verbose: print()
 
     # Attacking phase.
+    total_killed = 0
     groups.sort(key=lambda g:g.initiative, reverse=True)
     for attacker in groups:
         defender = attacker.target
@@ -100,9 +102,15 @@ def fight(groups, verbose=True):
             before = defender.units
             defender.units = max(defender.units - dmg // defender.hp, 0)
             killed = before - defender.units
+            total_killed += killed
             if verbose: print(f'{attacker.army} group {attacker.id} attacks defending group {defender.id}, killing {killed} units')
 
     if verbose: print()
+
+    # Detect a statemate.
+    if total_killed == 0:
+        groups.clear()
+        return
 
     # Remove all groups without any units left.
     for group in list(groups):
@@ -113,12 +121,30 @@ def fight(groups, verbose=True):
     for group in groups:
         del group.target
 
-def simulate(groups, verbose=False):
+def simulate(groups, boost=0, verbose=False):
+    for group in groups:
+        if group.army == 'Immune System':
+            group.atk += boost
     while len(set(map(lambda g: g.army, groups))) > 1:
         fight(groups, verbose)
-    if verbose:
-        print_state(groups)
-    return sum(g.units for g in groups)
+
+    if len(groups) > 0:
+        if verbose: print_state(groups)
+        return (groups[0].army, sum(g.units for g in groups))
+    else:
+        if verbose: print('Tie or stalemate.')
+        return (None, 0)
+
+def simulate_no_boost(groups, verbose=False):
+    return simulate(groups, boost=0, verbose=verbose)[1]
+
+def boost_immune_system(groups, verbose=False):
+    boost = 1
+    winner = None
+    while winner != 'Immune System':
+        winner, units = simulate(deepcopy(groups), boost, verbose)
+        boost += 1
+    return units
 
 if __name__ == "__main__":
-    solve(24, parse, simulate)
+    solve(24, parse, simulate_no_boost, boost_immune_system)
