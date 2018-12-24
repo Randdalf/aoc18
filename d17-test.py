@@ -6,7 +6,7 @@
 import unittest
 
 from d17 import parse
-from d17 import count_water
+from d17 import count_all_water
 
 example1="""x=495, y=2..7
 y=7, x=495..501
@@ -19,7 +19,7 @@ y=13, x=498..504"""
 
 class CountWaterTests(unittest.TestCase):
     def test_example1(slf):
-        slf.assertEqual(count_water(parse(example1)), 57)
+        slf.assertEqual(count_all_water(parse(example1)), 57)
 
 if __name__ == "__main__":
     unittest.main()
